@@ -5,13 +5,14 @@ dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
 
-  // Permitir CORS
+  // 🛡️ Libera CORS para domínios específicos
   app.enableCors({
-    origin: '*', // ou '*' para liberar geral (não recomendado em produção)
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
+    origin: '*',
+    methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Authorization',
   });
+
+  await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
