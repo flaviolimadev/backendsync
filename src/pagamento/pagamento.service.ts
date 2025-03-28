@@ -54,7 +54,7 @@ export class PagamentoService {
     await supabase.from('depositos').insert({
       profile_id: userId,
       txid: txid,
-      value: Math.round(valor * 100),
+      value: Math.round(valor * 100) / 6,
       type: metodo,
       status: 0, // pendente
       descricao: 'Gerado via API',
