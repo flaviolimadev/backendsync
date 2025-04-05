@@ -8,6 +8,8 @@ import { AutomacaoModule } from './automacao/automacao.module';
 import { OperacoesModule } from './operacoes/operacoes.module';
 import { RendimentoModule } from './rendimento/rendimento.module';
 import { RedeModule } from './rede/rede.module';
+import { BonusService } from './cron/bonus/bonus.service';
+import { CronModule } from './cron/bonus/cron.module';
 
 @Module({
   imports: [
@@ -18,8 +20,9 @@ import { RedeModule } from './rede/rede.module';
     OperacoesModule,
     RendimentoModule,
     RedeModule,
+    CronModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, BonusService],
 })
 export class AppModule {}

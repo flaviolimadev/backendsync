@@ -6,8 +6,8 @@ import { supabase } from '../supabase/supabase.service';
 export class SaqueService {
   async solicitarSaque(dto: CreateSaqueDto) {
     // 1. Verificar valor mínimo
-    if (dto.value < 1000) {
-      throw new BadRequestException('O valor mínimo para saque é de $10 (1000).');
+    if (dto.value < 40) {
+      throw new BadRequestException('O valor mínimo para saque é de $1.');
     }
 
     // 2. Buscar saldo do usuário
