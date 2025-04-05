@@ -7,6 +7,7 @@ import { SaqueModule } from './saque/saque.module';
 import { AutomacaoModule } from './automacao/automacao.module';
 import { OperacoesModule } from './operacoes/operacoes.module';
 import { RendimentoModule } from './rendimento/rendimento.module';
+import { RedeModule } from './rede/rede.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { RendimentoModule } from './rendimento/rendimento.module';
     AutomacaoModule,
     OperacoesModule,
     RendimentoModule,
+    RedeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

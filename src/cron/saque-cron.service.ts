@@ -52,7 +52,7 @@ export class SaqueCronService {
           continue;
         }
 
-        const saqueCents = saque.value;
+        const saqueCents = saque.value * 6;
         const idempotentId = uuidv4().replace(/[^a-zA-Z0-9]/g, '');
 
         const dataPix = {
