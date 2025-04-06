@@ -5,12 +5,10 @@ import { supabase } from '../supabase/supabase.service';
 @Injectable()
 export class SaqueService {
   async solicitarSaque(dto: CreateSaqueDto) {
-    // 1. Verificar valor mínimo
     if (dto.value < 40) {
       throw new BadRequestException('O valor mínimo para saque é de $1.');
     }
 
-    // 2. Buscar saldo do usuário
     const { data: user, error: userError } = await supabase
       .from('profiles')
       .select('balance')
@@ -21,12 +19,10 @@ export class SaqueService {
       throw new BadRequestException('Usuário não encontrado.');
     }
 
-    // 3. Verificar saldo suficiente
     if (user.balance < dto.value) {
       throw new BadRequestException('Saldo insuficiente para realizar o saque.');
     }
 
-    // 4. Inserir saque
     const { data: saque, error: saqueError } = await supabase.from('saques').insert({
       profile_id: dto.profile_id,
       value: dto.value,
@@ -35,13 +31,13 @@ export class SaqueService {
       carteira: dto.carteira,
       bonus: false,
       descricao: 'Solicitação de saque',
+      cpf: dto.cpf,
     }).select('id').single();
 
     if (saqueError) {
       throw new Error(`Erro ao solicitar saque: ${saqueError.message}`);
     }
 
-    // 6. Atualizar saldo do usuário
     const { error: updateBalanceError } = await supabase
       .from('profiles')
       .update({ balance: user.balance - dto.value })

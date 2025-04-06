@@ -21,15 +21,15 @@ export class SaqueCronService {
     return response.data.access_token;
   }
 
-  @Cron(CronExpression.EVERY_MINUTE) // a cada 60 segundos
+  @Cron(CronExpression.EVERY_MINUTE) // Executa a cada minuto
   async executarSaquesPix() {
     this.logger.log('🚀 Verificando saques pendentes via Pix...');
 
     const { data: saques, error } = await supabase
       .from('saques')
-      .select('id, profile_id, value, carteira')
+      .select('id, profile_id, value, carteira, cpf')
       .eq('status', 0)
-      .eq('type', 1); // Apenas PIX
+      .eq('type', 1); // Apenas saques do tipo PIX
 
     if (error || !saques) {
       this.logger.error('❌ Erro ao buscar saques pendentes.');
@@ -52,17 +52,19 @@ export class SaqueCronService {
           continue;
         }
 
-        const saqueCents = Math.floor(saque.value * 6); // arredonda para baixo
+        const saqueCents = Math.floor(saque.value * 6);
         const idempotentId = uuidv4().replace(/[^a-zA-Z0-9]/g, '');
+
+        const pix_key_type = this.detectPixKeyType(saque.carteira);
 
         const dataPix = {
           initiation_type: 'dict',
           idempotent_id: idempotentId,
           receiver_name: profile.first_name,
-          receiver_document: saque.carteira, // CPF vem da carteira
+          receiver_document: saque.cpf, // Vem do banco agora
           value_cents: saqueCents,
-          pix_key_type: 'cpf',
-          pix_key: saque.carteira, // CPF vem da carteira
+          pix_key_type,
+          pix_key: saque.carteira,
           authorized: true,
         };
 
@@ -71,9 +73,12 @@ export class SaqueCronService {
           'Content-Type': 'application/json',
         };
 
-        const response = await axios.post('https://api.primepag.com.br/v1/pix/payments', dataPix, { headers });
+        const response = await axios.post(
+          'https://api.primepag.com.br/v1/pix/payments',
+          dataPix,
+          { headers },
+        );
 
-        // Se resposta foi bem-sucedida
         if (response.data && response.data.payment) {
           await supabase.from('saques').update({ status: 1 }).eq('id', saque.id);
 
@@ -110,5 +115,12 @@ export class SaqueCronService {
         });
       }
     }
+  }
+
+  private detectPixKeyType(chave: string): 'email' | 'cpf' | 'phone' {
+    if (chave.includes('@')) return 'email';
+    if (/^\+55\d{11}$/.test(chave)) return 'phone';
+    if (/^\d{11}$/.test(chave)) return 'cpf';
+    throw new Error(`Tipo de chave Pix inválido: ${chave}`);
   }
 }
