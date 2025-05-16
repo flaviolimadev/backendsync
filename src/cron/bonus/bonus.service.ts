@@ -11,11 +11,14 @@ export class BonusService {
 
   // Porcentagens de comissão por nível
   private porcentagens = {
-    1: 12,
-    2: 4,
-    3: 2,
-    4: 1,
-    5: 1,
+    1: 13,
+    2: 5,
+    3: 4,
+    4: 3,
+    5: 2,
+    6: 1,
+    7: 1,
+    8: 1,
   };
 
   constructor() {
@@ -42,17 +45,26 @@ export class BonusService {
       let valorDeposito = deposito.value;
       let nivel = 1;
 
-      while (nivel <= 5) {
+      while (nivel <= 8) {
         // Busca o usuário que fez o depósito
         const { data: user } = await this.supabase
           .from('profiles')
-          .select('referred_by')
+          .select('referrer_username')
           .eq('id', userId)
           .single();
 
-        if (!user?.referred_by) break; // se não há quem indicou, fim da bonificação
+        if (!user?.referrer_username) break; // se não há quem indicou, fim da bonificação
 
-        const refId = user.referred_by;
+        // Busca o ID do usuário indicador pelo username
+        const { data: referrer } = await this.supabase
+          .from('profiles')
+          .select('id')
+          .eq('username', user.referrer_username)
+          .single();
+          
+        if (!referrer?.id) break; // se não encontrou o indicador, fim da bonificação
+        
+        const refId = referrer.id;
         const percentual = this.porcentagens[nivel];
         const comissao = Math.floor(valorDeposito * (percentual / 100));
         const tipo = nivel === 1 ? 2 : 3;
@@ -66,15 +78,15 @@ export class BonusService {
 
         const nomeUsuario = quemDepositou?.first_name ?? 'usuário desconhecido';
 
-        // Criar extrato
-        await this.supabase.from('extrato').insert([
+        // Criar registro na tabela transactions
+        await this.supabase.from('transactions').insert([
           {
-            profile_id: refId,
-            profile_ref: userId,
-            value: comissao,
-            type: tipo,
-            status: 1,
-            descricao: `Bônus nível ${nivel} gerado pelo depósito de ${nomeUsuario}`,
+            user_id: refId,
+            reference_id: userId,
+            amount: comissao,
+            type: nivel === 1 ? 'level1_bonus' : 'multilevel_bonus',
+            status: 'completed',
+            description: `Bônus nível ${nivel} gerado pelo depósito de ${nomeUsuario}`,
             created_at: timestamp,
             updated_at: timestamp,
           },

@@ -12,7 +12,7 @@ export class PagamentoCheckerService {
 
     const headers = {
       Authorization:
-        'ODE2NTliNjctNzQ5Zi00NDFjLTgwNDAtMjY1NzM2YTA1NDFkOmRmOGYwN2JjLWFjZWYtNDgxNi1iYTQ3LTliZWU5OTc3NDdlYQ==',
+        'MTc3ZjRmNjYtZmY2ZC00MmMyLTgwOTItODdiYzFhN2UzYTYxOjU2ZWYzMGI1LWI0ZmMtNGI1OC05MDEyLWY4OGM2NGM1Zjc4MA=='',
       'Content-Type': 'application/json',
     };
 
@@ -71,14 +71,14 @@ export class PagamentoCheckerService {
               .update({ status: 1 })
               .eq('id', deposito.id);
           
-            // Cria o extrato
-            await supabase.from('extrato').insert({
-              profile_id: deposito.profile_id,
-              value: deposito.value,
-              type: 0,
-              status: 1,
-              descricao: 'Depósito confirmado via Pix',
-              profile_ref: deposito.profile_id,
+            // Cria o registro na tabela transactions
+            await supabase.from('transactions').insert({
+              user_id: deposito.profile_id,
+              amount: deposito.value,
+              type: 'deposit',
+              status: 'completed',
+              description: 'Depósito confirmado via Pix',
+              reference_id: deposito.txid,
             });
 
             // Atualiza o balance_invest do usuário

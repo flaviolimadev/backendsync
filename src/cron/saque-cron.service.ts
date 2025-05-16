@@ -13,7 +13,7 @@ export class SaqueCronService {
 
     const headers = {
       Authorization:
-        'ODE2NTliNjctNzQ5Zi00NDFjLTgwNDAtMjY1NzM2YTA1NDFkOmRmOGYwN2JjLWFjZWYtNDgxNi1iYTQ3LTliZWU5OTc3NDdlYQ==',
+        'MTc3ZjRmNjYtZmY2ZC00MmMyLTgwOTItODdiYzFhN2UzYTYxOjU2ZWYzMGI1LWI0ZmMtNGI1OC05MDEyLWY4OGM2NGM1Zjc4MA==',
       'Content-Type': 'application/json',
     };
 
@@ -82,13 +82,13 @@ export class SaqueCronService {
         if (response.data && response.data.payment) {
           await supabase.from('saques').update({ status: 1 }).eq('id', saque.id);
 
-          await supabase.from('extrato').insert({
-            profile_id: saque.profile_id,
-            value: saque.value,
-            type: 4,
-            status: 1,
-            descricao: 'Saque Pix realizado com sucesso',
-            profile_ref: saque.profile_id,
+          await supabase.from('transactions').insert({
+            user_id: saque.profile_id,
+            amount: saque.value,
+            type: 'withdrawal',
+            status: 'completed',
+            description: 'Saque Pix realizado com sucesso',
+            reference_id: saque.id,
           });
 
           this.logger.log(`✅ Saque Pix efetuado para ${profile.first_name}: ${saque.value / 100} USD`);
@@ -105,13 +105,13 @@ export class SaqueCronService {
 
         await supabase.from('saques').update({ status: 2 }).eq('id', saque.id);
 
-        await supabase.from('extrato').insert({
-          profile_id: saque.profile_id,
-          value: saque.value,
-          type: 4,
-          status: 2,
-          descricao: 'Erro ao processar saque Pix',
-          profile_ref: saque.profile_id,
+        await supabase.from('transactions').insert({
+          user_id: saque.profile_id,
+          amount: saque.value,
+          type: 'withdrawal',
+          status: 'failed',
+          description: 'Erro ao processar saque Pix',
+          reference_id: saque.id,
         });
       }
     }
